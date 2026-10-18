@@ -6,6 +6,10 @@ import com.github.alathra.siegeengines.crafting.CraftingRecipes;
 import com.github.alathra.siegeengines.data.SiegeEnginesData;
 import com.github.alathra.siegeengines.projectile.*;
 import com.github.alathra.siegeengines.util.SiegeEnginesUtil;
+import com.github.alathra.siegeengines.util.MessageUtil;
+import net.kyori.adventure.text.Component;
+import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EntityType;
@@ -15,6 +19,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 
 @SuppressWarnings("deprecation")
 public class Config {
@@ -30,7 +35,6 @@ public class Config {
     public static int controlDistance = 10;
     public static int rotateDistance = 10;
     public static int maxSiegeEnginesControlled = 5;
-    public static boolean autoReload = false;
     public static boolean arrowDamageToggle = false;
     public static boolean craftingRecipes = true;
     public static boolean doDebug = false;
@@ -45,8 +49,8 @@ public class Config {
     public static Material trebuchetFuelItem = Material.STRING;
     public static double trebuchetHealth = 8d;
     public static HashMap<ItemStack, SiegeEngineProjectile> trebuchetProjectiles = new HashMap<>();
-    public static String trebuchetItemName = "&e&oTrebuchet";
-    public static List<String> trebuchetItemLore;
+    public static Component trebuchetItemName = MessageUtil.legacy("&e&oTrebuchet");
+    public static List<Component> trebuchetItemLore;
 
     public static int ballistaShotAmount = 1;
     public static float ballistaVelocityPerFuel = 0.925f;
@@ -54,8 +58,8 @@ public class Config {
     public static int ballistaMaxFuel = 4;
     public static Material ballistaFuelItem = Material.STRING;
     public static HashMap<ItemStack, SiegeEngineProjectile> ballistaProjectiles = new HashMap<>();
-    public static String ballistaItemName = "&e&oBallista";
-    public static List<String> ballistaItemLore;
+    public static Component ballistaItemName = MessageUtil.legacy("&e&oBallista");
+    public static List<Component> ballistaItemLore;
 
     public static int swivelCannonShotAmount = 1;
     public static float swivelCannonVelocityPerFuel = 1.0125f;
@@ -63,8 +67,8 @@ public class Config {
     public static int swivelCannonMaxFuel = 5;
     public static Material swivelCannonFuelItem = Material.GUNPOWDER;
     public static HashMap<ItemStack, SiegeEngineProjectile> swivelCannonProjectiles = new HashMap<>();
-    public static String swivelCannonItemName = "&e&oSwivel Cannon";
-    public static List<String> swivelCannonItemLore;
+    public static Component swivelCannonItemName = MessageUtil.legacy("&e&oSwivel Cannon");
+    public static List<Component> swivelCannonItemLore;
 
     public static int breachCannonShotAmount = 1;
     public static float breachCannonVelocityPerFuel = 1.075f;
@@ -72,8 +76,8 @@ public class Config {
     public static int breachCannonMaxFuel = 4;
     public static Material breachCannonFuelItem = Material.GUNPOWDER;
     public static HashMap<ItemStack, SiegeEngineProjectile> breachCannonProjectiles = new HashMap<>();
-    public static String breachCannonItemName = "&e&oBreach Cannon";
-    public static List<String> breachCannonItemLore;
+    public static Component breachCannonItemName = MessageUtil.legacy("&e&oBreach Cannon");
+    public static List<Component> breachCannonItemLore;
 
     // Projectiles
 
@@ -132,10 +136,8 @@ public class Config {
                     projectileMap.get(projectileName));
             }
         }
-        trebuchetItemName = ChatColor.translateAlternateColorCodes('&',
-            config.getString("SiegeEngines.Trebuchet.ItemName"));
-        trebuchetItemLore = config.getStringList("SiegeEngines.Trebuchet.Lore");
-        trebuchetItemLore.replaceAll(textToTranslate -> ChatColor.translateAlternateColorCodes('&', textToTranslate));
+        trebuchetItemName = MessageUtil.legacy(config.getString("SiegeEngines.Trebuchet.ItemName"));
+        trebuchetItemLore = MessageUtil.legacy(config.getStringList("SiegeEngines.Trebuchet.Lore"));
     }
 
     private static void loadBallistaValues() {
@@ -156,10 +158,8 @@ public class Config {
                     projectileMap.get(projectileName));
             }
         }
-        ballistaItemName = ChatColor.translateAlternateColorCodes('&',
-            config.getString("SiegeEngines.Ballista.ItemName"));
-        ballistaItemLore = config.getStringList("SiegeEngines.Ballista.Lore");
-        ballistaItemLore.replaceAll(textToTranslate -> ChatColor.translateAlternateColorCodes('&', textToTranslate));
+        ballistaItemName = MessageUtil.legacy(config.getString("SiegeEngines.Ballista.ItemName"));
+        ballistaItemLore = MessageUtil.legacy(config.getStringList("SiegeEngines.Ballista.Lore"));
     }
 
     private static void loadSwivelCannonValues() {
@@ -180,10 +180,8 @@ public class Config {
                     projectileMap.get(projectileName));
             }
         }
-        swivelCannonItemName = ChatColor.translateAlternateColorCodes('&',
-            config.getString("SiegeEngines.SwivelCannon.ItemName"));
-        swivelCannonItemLore = config.getStringList("SiegeEngines.SwivelCannon.Lore");
-        swivelCannonItemLore.replaceAll(textToTranslate -> ChatColor.translateAlternateColorCodes('&', textToTranslate));
+        swivelCannonItemName = MessageUtil.legacy(config.getString("SiegeEngines.SwivelCannon.ItemName"));
+        swivelCannonItemLore = MessageUtil.legacy(config.getStringList("SiegeEngines.SwivelCannon.Lore"));
     }
 
     private static void loadBreachCannonValues() {
@@ -204,10 +202,25 @@ public class Config {
                     projectileMap.get(projectileName));
             }
         }
-        breachCannonItemName = ChatColor.translateAlternateColorCodes('&',
-            config.getString("SiegeEngines.BreachCannon.ItemName"));
-        breachCannonItemLore = config.getStringList("SiegeEngines.BreachCannon.Lore");
-        breachCannonItemLore.replaceAll(textToTranslate -> ChatColor.translateAlternateColorCodes('&', textToTranslate));
+        breachCannonItemName = MessageUtil.legacy(config.getString("SiegeEngines.BreachCannon.ItemName"));
+        breachCannonItemLore = MessageUtil.legacy(config.getStringList("SiegeEngines.BreachCannon.Lore"));
+    }
+
+    /**
+     * Resolves a sound from either a namespaced key (e.g. {@code entity.generic.explode}) or a legacy
+     * enum-style name (e.g. {@code ENTITY_GENERIC_EXPLODE}).
+     */
+    private static Sound parseSound(String name) {
+        final Registry<Sound> registry = RegistryAccess.registryAccess().getRegistry(RegistryKey.SOUND_EVENT);
+        final NamespacedKey key = NamespacedKey.fromString(name.toLowerCase(Locale.ROOT));
+        final Sound sound = key != null ? registry.get(key) : null;
+        if (sound != null)
+            return sound;
+
+        return registry.stream()
+            .filter(s -> registry.getKeyOrThrow(s).getKey().replace('.', '_').equalsIgnoreCase(name))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("Unknown sound: " + name));
     }
 
     private static void loadSiegeEngineConfig() {
@@ -256,8 +269,7 @@ public class Config {
                             .getDouble("Projectiles." + projectileName + ".Inaccuracy");
                         explosiveProjectile.projectilesCount = config
                             .getInt("Projectiles." + projectileName + ".ProjectileCount");
-                        explosiveProjectile.soundType = Sound
-                            .valueOf(config.getString("Projectiles." + projectileName + ".FireSound"));
+                        explosiveProjectile.soundType = parseSound(config.getString("Projectiles." + projectileName + ".FireSound"));
                         explosiveProjectile.velocityFactor = (float) config
                             .getDouble("Projectiles." + projectileName + ".VelocityFactor");
                         projectileMap.put(projectileName, explosiveProjectile);
@@ -270,8 +282,7 @@ public class Config {
                         entityProjectile.projectileCount = config.getInt("Projectiles." + projectileName + ".ProjectileCount");
                         entityProjectile.entityType = EntityType
                             .valueOf(config.getString("Projectiles." + projectileName + ".EntityType"));
-                        entityProjectile.soundType = Sound
-                            .valueOf(config.getString("Projectiles." + projectileName + ".FireSound"));
+                        entityProjectile.soundType = parseSound(config.getString("Projectiles." + projectileName + ".FireSound"));
                         entityProjectile.velocityFactor = (float) config
                             .getDouble("Projectiles." + projectileName + ".VelocityFactor");
                         if (entityProjectile.entityType.equals(EntityType.ARROW)) {

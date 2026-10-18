@@ -15,7 +15,7 @@ val mainPackage = "${project.group}.${project.name.lowercase()}"
 applyCustomVersion()
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21)) // Configure the java toolchain. This allows gradle to auto-provision JDK 21 on systems that only have JDK 8 installed for example.
+    toolchain.languageVersion.set(JavaLanguageVersion.of(25)) // Configure the java toolchain. This allows gradle to auto-provision JDK 25 on systems that only have JDK 8 installed for example.
     withJavadocJar()
     withSourcesJar()
 }
@@ -24,7 +24,6 @@ repositories {
     mavenCentral()
 
     maven("https://repo.papermc.io/repository/maven-public/")
-    maven("https://maven.athyrium.eu/releases")
 }
 
 dependencies {
@@ -32,14 +31,6 @@ dependencies {
     compileOnly(libs.annotations)
     annotationProcessor(libs.annotations)
     compileOnly(libs.paper.api)
-
-    // API
-    implementation(libs.colorparser) {
-        exclude("org.intellij.lang.annotations")
-        exclude("org.jetbrains.lang.annotations")
-        exclude("net.kyori")
-    }
-    implementation(libs.commandapi.shade)
 }
 
 tasks {
@@ -49,7 +40,7 @@ tasks {
 
     compileJava {
         options.encoding = Charsets.UTF_8.name()
-        options.release.set(21)
+        options.release.set(25)
         options.compilerArgs.addAll(arrayListOf("-Xlint:all", "-Xlint:-processing", "-Xdiags:verbose"))
     }
 
@@ -72,12 +63,6 @@ tasks {
         archiveBaseName.set(project.name)
         archiveClassifier.set("")
 
-        // Shadow classes
-        fun reloc(originPkg: String, targetPkg: String) = relocate(originPkg, "${mainPackage}.lib.${targetPkg}")
-
-        reloc("com.github.milkdrinkers.colorparser", "colorparser")
-        reloc("dev.jorel.commandapi", "commandapi")
-
         minimize()
         exclude("META-INF/**")
     }
@@ -89,7 +74,7 @@ tasks {
 
     runServer {
         // Configure the Minecraft version for our task.
-        minecraftVersion("1.21.8")
+        minecraftVersion("26.3")
 
         // IntelliJ IDEA debugger setup: https://docs.papermc.io/paper/dev/debugging#using-a-remote-debugger
         jvmArgs("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005", "-DPaper.IgnoreJavaVersion=true", "-Dcom.mojang.eula.agree=true", "-DIReallyKnowWhatIAmDoingISwear", "-Dpaper.playerconnection.keepalive=6000")
@@ -112,7 +97,7 @@ bukkit { // Options: https://github.com/Minecrell/plugin-yml#bukkit
     description = "${project.description}"
     authors = listOf("ShermansWorld", "C_Corp2002")
     contributors = listOf("darksaid98")
-    apiVersion = "1.21"
+    apiVersion = "26.3"
 
     // Misc properties
     load = net.minecrell.pluginyml.bukkit.BukkitPluginDescription.PluginLoadOrder.POSTWORLD // STARTUP or POSTWORLD

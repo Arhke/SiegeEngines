@@ -2,14 +2,18 @@ package com.github.alathra.siegeengines.command;
 
 import com.github.alathra.siegeengines.SiegeEngine;
 import com.github.alathra.siegeengines.config.Config;
-import io.github.milkdrinkers.colorparser.ColorParser;
-import dev.jorel.commandapi.CommandAPIBukkit;
-import dev.jorel.commandapi.CommandAPICommand;
-import dev.jorel.commandapi.arguments.ArgumentSuggestions;
-import dev.jorel.commandapi.arguments.PlayerArgument;
-import dev.jorel.commandapi.arguments.StringArgument;
-import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
-import dev.jorel.commandapi.executors.CommandArguments;
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.tree.LiteralCommandNode;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
+import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -19,78 +23,68 @@ import org.bukkit.inventory.meta.ItemMeta;
 import static com.github.alathra.siegeengines.SiegeEngines.*;
 
 public class SiegeEnginesCommand {
-    public SiegeEnginesCommand() {
-        new CommandAPICommand("siegeengines")
-            .withFullDescription("Example command.")
-            .withShortDescription("Example command.")
-            .withPermission("siegeengines.command")
-            .withSubcommands(
-                commandGet(),
-                commandGetAll(),
-                commandReload()
-            )
-            .executesPlayer(this::onExecute)
-            .register();
+    private static final MiniMessage MM = MiniMessage.miniMessage();
+
+    public static void register(Commands commands) {
+        LiteralCommandNode<CommandSourceStack> root = Commands.literal("siegeengines")
+            .requires(source -> source.getSender().hasPermission("siegeengines.command") && source.getExecutor() instanceof Player)
+            .executes(SiegeEnginesCommand::onExecute)
+            .then(commandGet())
+            .then(Commands.literal("getAll")
+                .requires(source -> source.getSender().hasPermission("siegeengines.command.getAll"))
+                .executes(SiegeEnginesCommand::onGetAll))
+            .then(Commands.literal("reload")
+                .requires(source -> source.getSender().hasPermission("siegeengines.command.reload"))
+                .executes(SiegeEnginesCommand::onReload))
+            .build();
+
+        commands.register(root, "Give siege engines or reload the configuration.");
     }
 
-    private void onExecute(CommandSender sender, CommandArguments args) {
-        sender.sendMessage(ColorParser.of("<yellow>Incorrect usage, /siegeengines get, /siegeengines getAll, /siegeengines reload").build());
+    private static int onExecute(CommandContext<CommandSourceStack> ctx) {
+        ctx.getSource().getSender().sendMessage(MM.deserialize("<yellow>Incorrect usage, /siegeengines get, /siegeengines getAll, /siegeengines reload"));
+        return Command.SINGLE_SUCCESS;
     }
 
-    private CommandAPICommand commandGet() {
-        return new CommandAPICommand("get")
-            .withPermission("siegeengines.command.get")
-            .withArguments(
-                new StringArgument("equipmentid")
-                    .replaceSuggestions(
-                        ArgumentSuggestions.strings(
-                            definedSiegeEngines.values().stream().map(SiegeEngine::getId).toList()
-                        )
-                    ),
-                new PlayerArgument("target")
-                    .setOptional(true)
-            )
-            .executesPlayer(this::onGet);
+    private static LiteralArgumentBuilder<CommandSourceStack> commandGet() {
+        return Commands.literal("get")
+            .requires(source -> source.getSender().hasPermission("siegeengines.command.get"))
+            .then(Commands.argument("equipmentid", StringArgumentType.word())
+                .suggests((ctx, builder) -> {
+                    definedSiegeEngines.values().stream().map(SiegeEngine::getId).forEach(builder::suggest);
+                    return builder.buildFuture();
+                })
+                .executes(ctx -> onGet(ctx, null))
+                .then(Commands.argument("target", ArgumentTypes.player())
+                    .executes(ctx -> onGet(ctx, ctx.getArgument("target", PlayerSelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst()))));
     }
 
-    private CommandAPICommand commandGetAll() {
-        return new CommandAPICommand("getAll")
-            .withPermission("siegeengines.command.getAll")
-            .executesPlayer(this::onGetAll);
-    }
+    private static int onGet(CommandContext<CommandSourceStack> ctx, Player target) throws CommandSyntaxException {
+        final String equipmentId = StringArgumentType.getString(ctx, "equipmentid");
+        final Player player = target != null ? target : (Player) ctx.getSource().getExecutor();
 
-    private CommandAPICommand commandReload() {
-        return new CommandAPICommand("reload")
-            .withPermission("siegeengines.command.reload")
-            .executesPlayer(this::onReload);
-    }
-
-    private void onGet(CommandSender sender, CommandArguments args) throws WrapperCommandSyntaxException {
-        if (!(args.get("equipmentid") instanceof String equipmentId))
-            throw CommandAPIBukkit.failWithAdventureComponent(ColorParser.of("<red>Invalid SiegeEngine id specified.").build());
-
-        Player player = (Player) args.getOptional("target").orElse(sender);
-
-        for (SiegeEngine SiegeEquipment : definedSiegeEngines.values()) {
-            if (SiegeEquipment.equals(equipmentId)) {
-                giveSiegeEngine(player, SiegeEquipment);
-                break;
+        for (SiegeEngine siegeEquipment : definedSiegeEngines.values()) {
+            if (siegeEquipment.equals(equipmentId)) {
+                giveSiegeEngine(player, siegeEquipment);
+                return Command.SINGLE_SUCCESS;
             }
         }
+
+        ctx.getSource().getSender().sendMessage(MM.deserialize("<red>Invalid SiegeEngine id specified."));
+        return 0;
     }
 
-    private void onGetAll(CommandSender sender, CommandArguments args) throws WrapperCommandSyntaxException {
-        if (!(sender instanceof Player player))
-            throw CommandAPIBukkit.failWithAdventureComponent(ColorParser.of("<red>Only players can use this command.").build());
+    private static int onGetAll(CommandContext<CommandSourceStack> ctx) {
+        final Player player = (Player) ctx.getSource().getExecutor();
 
         for (SiegeEngine i : definedSiegeEngines.values()) {
             giveSiegeEngine(player, i);
         }
+        return Command.SINGLE_SUCCESS;
     }
 
-    private void onReload(CommandSender sender, CommandArguments args) throws WrapperCommandSyntaxException {
-        if (!(sender instanceof Player))
-            throw CommandAPIBukkit.failWithAdventureComponent(ColorParser.of("<red>Only players can use this command.").build());
+    private static int onReload(CommandContext<CommandSourceStack> ctx) {
+        final CommandSender sender = ctx.getSource().getSender();
         Config.reload();
         activeSiegeEngines.clear();
         siegeEngineEntitiesPerPlayer.clear();
@@ -98,22 +92,23 @@ public class SiegeEnginesCommand {
         addDefaults();
         for (SiegeEngine i : definedSiegeEngines.values()) {
             if (Config.doDebug) {
-                sender.sendMessage(ColorParser.of("<yellow>Enabled SiegeEngine : %s".formatted(i.getEngineName())).build());
-                sender.sendMessage(ColorParser.of("<yellow>SiegeEngine Propellant/\"Fuel\" ItemStacks : %s".formatted(i.getFuelItem())).build());
+                sender.sendMessage(MM.deserialize("<yellow>Enabled SiegeEngine : <name>", Placeholder.unparsed("name", i.getEngineName())));
+                sender.sendMessage(MM.deserialize("<yellow>SiegeEngine Propellant/\"Fuel\" ItemStacks : <item>", Placeholder.unparsed("item", String.valueOf(i.getFuelItem()))));
                 for (ItemStack proj : i.getProjectiles().keySet()) {
-                    sender.sendMessage(ColorParser.of("<yellow>SiegeEngine Projectile ItemStacks : %s".formatted(proj)).build());
+                    sender.sendMessage(MM.deserialize("<yellow>SiegeEngine Projectile ItemStacks : <item>", Placeholder.unparsed("item", String.valueOf(proj))));
                 }
             }
         }
-        sender.sendMessage(ColorParser.of("<yellow>SiegeEngine configs reloaded").build());
+        sender.sendMessage(MM.deserialize("<yellow>SiegeEngine configs reloaded"));
+        return Command.SINGLE_SUCCESS;
     }
 
-    private void giveSiegeEngine(Player player, SiegeEngine siegeEngine) {
+    private static void giveSiegeEngine(Player player, SiegeEngine siegeEngine) {
         ItemStack item = new ItemStack(Material.CARVED_PUMPKIN);
         ItemMeta meta = item.getItemMeta();
         meta.setCustomModelData(siegeEngine.getReadyModelNumber());
-        meta.setDisplayName(siegeEngine.getItemName());
-        meta.setLore(siegeEngine.getItemLore());
+        meta.displayName(siegeEngine.getItemName());
+        meta.lore(siegeEngine.getItemLore());
         item.setItemMeta(meta);
         player.getInventory().addItem(item);
     }

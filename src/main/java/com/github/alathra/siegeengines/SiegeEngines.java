@@ -82,20 +82,20 @@ public class SiegeEngines extends JavaPlugin {
                 meta.setCustomModelData(siegeEngine.getReadyModelNumber());
                 switch (siegeEngine.getType()) {
                     case TREBUCHET:
-                        meta.setDisplayName(Config.trebuchetItemName);
-                        meta.setLore(Config.trebuchetItemLore);
+                        meta.displayName(Config.trebuchetItemName);
+                        meta.lore(Config.trebuchetItemLore);
                         break;
                     case BALLISTA:
-                        meta.setDisplayName(Config.ballistaItemName);
-                        meta.setLore(Config.ballistaItemLore);
+                        meta.displayName(Config.ballistaItemName);
+                        meta.lore(Config.ballistaItemLore);
                         break;
                     case SWIVEL_CANNON:
-                        meta.setDisplayName(Config.swivelCannonItemName);
-                        meta.setLore(Config.swivelCannonItemLore);
+                        meta.displayName(Config.swivelCannonItemName);
+                        meta.lore(Config.swivelCannonItemLore);
                         break;
                     case BREACH_CANNON:
-                        meta.setDisplayName(Config.breachCannonItemName);
-                        meta.setLore(Config.ballistaItemLore);
+                        meta.displayName(Config.breachCannonItemName);
+                        meta.lore(Config.breachCannonItemLore);
                         break;
                 }
                 item.setItemMeta(meta);
@@ -135,7 +135,6 @@ public class SiegeEngines extends JavaPlugin {
         trebuchet.setFiringModelNumbers(new ArrayList<>(
             Arrays.asList(123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139)));
         trebuchet.setCycleThroughModelsWhileFiring(true);
-        trebuchet.setMountable(Config.trebuchetCanMount);
         definedSiegeEngines.put(trebuchet.getReadyModelNumber(), trebuchet);
 
         // Ballista
@@ -163,7 +162,6 @@ public class SiegeEngines extends JavaPlugin {
         ballista.setPreLoadModelNumber(144);
         ballista.setFiringModelNumbers(new ArrayList<>(Arrays.asList(143, 144, 145, 146)));
         ballista.setCycleThroughModelsWhileFiring(true);
-        ballista.setMountable(Config.ballistaCanMount);
         definedSiegeEngines.put(ballista.getReadyModelNumber(), ballista);
 
         // Siege Cannon
@@ -186,7 +184,6 @@ public class SiegeEngines extends JavaPlugin {
         swivelCannon.setFiringModelNumbers(new ArrayList<>());
         swivelCannon.setRotateStandHead(true);
         swivelCannon.setRotateSideways(true);
-        swivelCannon.setMountable(Config.swivelCannonCanMount);
         definedSiegeEngines.put(swivelCannon.getReadyModelNumber(), swivelCannon);
 
         // Naval Cannon
@@ -209,7 +206,6 @@ public class SiegeEngines extends JavaPlugin {
         breachCannon.setFiringModelNumbers(new ArrayList<>());
         breachCannon.setRotateStandHead(true);
         breachCannon.setRotateSideways(false);
-        breachCannon.setMountable(Config.breachCannonCanMount);
         definedSiegeEngines.put(breachCannon.getReadyModelNumber(), breachCannon);
 
     }

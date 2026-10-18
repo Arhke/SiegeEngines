@@ -1,5 +1,6 @@
 package com.github.alathra.siegeengines;
 
+import net.kyori.adventure.pointer.Pointers;
 import org.bukkit.Location;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
@@ -57,5 +58,10 @@ public class SiegeEnginesDamageSource implements DamageSource {
     @Override
     public boolean scalesWithDifficulty() {
         return false;
+    }
+
+    @Override
+    public @NotNull Pointers getDamageContext() {
+        return Pointers.empty();
     }
 }

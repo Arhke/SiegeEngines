@@ -18,8 +18,8 @@ public class SiegeEnginesAPI {
         ItemStack trebuchetItem = new ItemStack(Material.CARVED_PUMPKIN);
         ItemMeta meta = trebuchetItem.getItemMeta();
         meta.setCustomModelData(122);
-        meta.setDisplayName(Config.trebuchetItemName);
-        meta.setLore(Config.trebuchetItemLore);
+        meta.displayName(Config.trebuchetItemName);
+        meta.lore(Config.trebuchetItemLore);
         trebuchetItem.setItemMeta(meta);
         return trebuchetItem;
     }
@@ -28,8 +28,8 @@ public class SiegeEnginesAPI {
         ItemStack ballistaItem = new ItemStack(Material.CARVED_PUMPKIN);
         ItemMeta meta = ballistaItem.getItemMeta();
         meta.setCustomModelData(145);
-        meta.setDisplayName(Config.ballistaItemName);
-        meta.setLore(Config.ballistaItemLore);
+        meta.displayName(Config.ballistaItemName);
+        meta.lore(Config.ballistaItemLore);
         ballistaItem.setItemMeta(meta);
         return ballistaItem;
     }
@@ -38,8 +38,8 @@ public class SiegeEnginesAPI {
         ItemStack swivelCannonItem = new ItemStack(Material.CARVED_PUMPKIN);
         ItemMeta meta = swivelCannonItem.getItemMeta();
         meta.setCustomModelData(141);
-        meta.setDisplayName(Config.swivelCannonItemName);
-        meta.setLore(Config.swivelCannonItemLore);
+        meta.displayName(Config.swivelCannonItemName);
+        meta.lore(Config.swivelCannonItemLore);
         swivelCannonItem.setItemMeta(meta);
         return swivelCannonItem;
     }
@@ -48,8 +48,8 @@ public class SiegeEnginesAPI {
         ItemStack breachCannonItem = new ItemStack(Material.CARVED_PUMPKIN);
         ItemMeta meta = breachCannonItem.getItemMeta();
         meta.setCustomModelData(142);
-        meta.setDisplayName(Config.breachCannonItemName);
-        meta.setLore(Config.breachCannonItemLore);
+        meta.displayName(Config.breachCannonItemName);
+        meta.lore(Config.breachCannonItemLore);
         breachCannonItem.setItemMeta(meta);
         return breachCannonItem;
     }

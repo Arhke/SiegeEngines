@@ -4,7 +4,9 @@ import com.github.alathra.siegeengines.config.Config;
 import com.github.alathra.siegeengines.projectile.EntityProjectile;
 import com.github.alathra.siegeengines.projectile.FireworkProjectile;
 import com.github.alathra.siegeengines.projectile.SiegeEngineProjectile;
+import com.github.alathra.siegeengines.util.MessageUtil;
 import com.github.alathra.siegeengines.util.SiegeEnginesUtil;
+import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.entity.ArmorStand.LockType;
@@ -27,8 +29,8 @@ public class SiegeEngine implements Cloneable {
     private SiegeEngineType type;
     private Boolean enabled;
     private String id;
-    private String itemName;
-    private List<String> itemLore;
+    private Component itemName;
+    private List<Component> itemLore;
     private String worldName;
     private UUID entityId;
     private Entity entity;
@@ -89,7 +91,7 @@ public class SiegeEngine implements Cloneable {
 
         // Set Default values
         setType(SiegeEngineType.UNKNOWN);
-        setItemName(ChatColor.translateAlternateColorCodes('&', "&eUnknown Siege Engine"));
+        setItemName(MessageUtil.legacy("&eUnknown Siege Engine"));
         setItemLore(new ArrayList<>());
         setXOffset(0);
         setYOffset(0);
@@ -432,8 +434,8 @@ public class SiegeEngine implements Cloneable {
             entity2.getPersistentDataContainer().set(key, PersistentDataType.STRING, id);
         }
         meta.setCustomModelData(this.getReadyModelNumber());
-        meta.setDisplayName(this.getItemName());
-        meta.setLore(this.getItemLore());
+        meta.displayName(this.getItemName());
+        meta.lore(this.getItemLore());
         item.setItemMeta(meta);
 
 
@@ -489,19 +491,19 @@ public class SiegeEngine implements Cloneable {
         this.enabled = enabled;
     }
 
-    public String getItemName() {
+    public Component getItemName() {
         return itemName;
     }
 
-    public void setItemName(String itemName) {
+    public void setItemName(Component itemName) {
         this.itemName = itemName;
     }
 
-    public List<String> getItemLore() {
+    public List<Component> getItemLore() {
         return itemLore;
     }
 
-    public void setItemLore(List<String> itemLore) {
+    public void setItemLore(List<Component> itemLore) {
         this.itemLore = itemLore;
     }
 
