@@ -18,14 +18,6 @@ config-version: 2
 # Enable/Disable Debug logging.
 Debug: false
 
-# The item used to aim and fire siege engines
-# Must be a valid material. See https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html
-ControlItem: CLOCK
-
-# The item used to only fire siege engines, an alternative to using the control item
-# Must be a valid material. See https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html
-FireItem: FLINT
-
 # Allows the disabling of Arrow Damage towards SiegeEngines.
 DisableArrowDamage: true
 
@@ -49,6 +41,107 @@ DisabledWorlds:
   - world_nether
   - world_the_end
 
+# Explosions from EXPLOSIVE projectiles use these block resistances instead of the vanilla ones
+# Other explosions, including the Bombshell, TNT and creepers, are not affected
+# For reference: stone is 6, obsidian and reinforced deepslate are 1200
+SiegeExplosions:
+  # Whether water and lava are ignored, so they don't protect what is behind or under them
+  IgnoreFluids: true
+  # Blocks stronger than this count as this. Unbreakable blocks such as bedrock are never broken
+  MaxBlastResistance: 12
+  # Reinforced deepslate counts as this instead of MaxBlastResistance
+  ReinforcedDeepslateBlastResistance: 12
+
+# Every block takes a number of breaks from explosions before it breaks, without having to be reinforced
+# Each explosion does its strength in breaks to the block it hits, fading to nothing at DamageFalloffRadius
+# Mining by hand is not affected. Damage isn't saved, and is forgotten when its chunk unloads
+# Players can see how many breaks damaged blocks have left with /rv
+Reinforcement:
+  Enabled: true
+  # How many breaks every block can take, unless it is in NotReinforceable. Decimals are allowed
+  DefaultBreaks: 500
+  # Damage fades linearly from full at the explosion to nothing this many blocks away. 0 turns falloff off
+  DamageFalloffRadius: 3
+  # Damage going in a thin direction is multiplied by this, so thin and spaced walls don't hold up like thick ones.
+  # The explosion pushes each block straight into the surface a siege engine projectile hit, or directly away from any
+  # other explosion (TNT, creepers, ...). Its damage is split between the x, y and z parts of that push, in proportion
+  # to how much the push goes each way. Each part is checked on its own, going block by block in that direction through
+  # blocks the explosion also hit: it's thin if it comes out into air or a partial block (slab, stairs...), and not thin
+  # if it comes out into a full solid block the explosion didn't hit (including protected blocks) or one that isn't
+  # reinforceable (glass, sand, ...), even if the explosion hit it.
+  # Set it very high to make thin blocks break instantly. Decimals are allowed
+  ThinBlockDamageMultiplier: 5
+  # Strength of explosions that aren't from siege engines (TNT, creepers, ...). Siege engine projectiles have their own Strength
+  ExplosionStrength: 1
+  # Minutes after a block was last damaged before its damage is forgotten
+  ForgetDamageAfter: 60
+  # Whether blocks that fall (sand, gravel, concrete powder, anvils, ...) take breaks. If false they break the vanilla way
+  ReinforceFallingBlocks: false
+  # Blocks whose name contains any of these break the vanilla way, unless their name contains BLOCK
+  # https://jd.papermc.io/paper/org/bukkit/Material.html
+  NotReinforceable:
+    - BEDROCK
+    - END_PORTAL_FRAME
+    - TALL_GRASS
+    - GRASS
+    - BAMBOO
+    - FLOWER
+    - MUSHROOM
+    - DEAD_BUSH
+    - SUGAR_CANE
+    - VINE
+    - NETHER_WART
+    - STEM
+    - SAPLING
+    - BARRIER
+    - BEETROOT
+    - BANNER
+    - CARPET
+    - CORAL
+    - CHORUS_FLOWER
+    - COMMAND_BLOCK
+    - MOVING_PISTON
+    - PISTON_HEAD
+    - TNT
+    - FIRE
+    - SNOW
+    - ICE
+    - CACTUS
+    - PORTAL
+    - CAKE
+    - ROSE
+    - SUNFLOWER
+    - ORCHID
+    - CAMPFIRE
+    - DANDELION
+    - RAIL
+    - KELP
+    - CRYSTAL
+    - GATEWAY
+    - END_ROD
+    - FERN
+    - GLASS
+    - BEACON
+    - PRESSURE_PLATE
+    - IRON_BARS
+    - TRAPDOOR
+    - LADDER
+    - LILAC
+    - LILY
+    - TULIP
+    - BLUET
+    - POPPY
+    - POTTED
+    - ALLIUM
+    - REDSTONE
+    - SCAFFOLDING
+    - BERRY
+    - BERRIES
+    - TORCH
+    - HEAD
+    - WALL
+    - DOOR
+
 # ======================================
 # |            Projectiles             |
 # ======================================
@@ -58,20 +151,33 @@ DisabledWorlds:
 # === Notes on projectile config options ===
 # ProjectileType: ENTITY, EXPLOSIVE, FIRWORK or POTION
 # ExplodePower: Only used in "EXPLOSIVE" projectile types, defines explosion power
+# ExplodePowerVariation: Only used in "EXPLOSIVE" projectile types, the most each shot's power can randomly vary
+#   either way, as a fraction of ExplodePower (0.15 = +/-15%, 0 = no variation). Defaults to 0.15 if left out
 # Inaccuracy: A factor of ramdomness (spread) applied to the aimed vector
 # ProjectileCount: How many individual projectile entities will be fired
 # VelocityFactor: How fast the projectile(s) will move through the air
-# AmmoType: The item that must be loaded into the Siege Engine to produce the projectile
+# AmmoItem: The item that must be held to fire the projectile
 # https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html
+# AmmoName: Optional, the custom name the held item must have, with & color codes (e.g. "&6Breach Shot")
+#   Colors count, so a name with a color can't be copied by renaming an item in an anvil
+# AmmoLore: Optional, the lore lines the held item must have, all of them in this order, with & color codes
+#   Players can't add lore themselves, so this is the safest check
+#   If several projectiles match the held item, the one that checks the most (name and lore) is fired
 # FireSound: What sound the Siege Engine makes when the projectile is fired
 # https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html
 # ArrowDamageFactor: A factor of arrow damage, only applies to ENTITY projectiles of type ARROW
+# Strength: How many reinforcement breaks the explosion does to the block it hits, fading with distance
+#   (see Reinforcement.DamageFalloffRadius). Decimals are allowed. EXPLOSIVE projectiles that hit a block at an angle do less, down to
+#   almost none for a glancing hit. Other explosions use Reinforcement.ExplosionStrength. Only used in "EXPLOSIVE"
+#   projectiles and ENTITY projectiles of type TNT. Defaults to 2 for EXPLOSIVE and 1 for TNT if left out
 
 
 Projectiles:
   StoneShot:
     ProjectileType: EXPLOSIVE
     ExplodePower: 3.25
+    Strength: 2
+    ExplodePowerVariation: 0.15
     Inaccuracy: 0.125
     ProjectileCount: 1
     VelocityFactor: 1.0
@@ -80,6 +186,8 @@ Projectiles:
   BreachShot:
     ProjectileType: EXPLOSIVE
     ExplodePower: 5.25
+    Strength: 4
+    ExplodePowerVariation: 0.15
     Inaccuracy: 0.375
     ProjectileCount: 1
     VelocityFactor: 1.0
@@ -88,6 +196,8 @@ Projectiles:
   RepeatingShot:
     ProjectileType: EXPLOSIVE
     ExplodePower: 1.75
+    Strength: 1
+    ExplodePowerVariation: 0.15
     Inaccuracy: 0.525
     ProjectileCount: 6
     VelocityFactor: 1.0
@@ -140,6 +250,75 @@ Projectiles:
     VelocityFactor: 0.5
     AmmoItem: SPLASH_POTION
     FireSound: ITEM_CROSSBOW_SHOOT
+  # Trebuchet: a spread of loose stones, weaker than StoneShot but covers an area
+  RubbleShot:
+    ProjectileType: EXPLOSIVE
+    ExplodePower: 1.25
+    Strength: 1
+    ExplodePowerVariation: 0.25
+    Inaccuracy: 0.6
+    ProjectileCount: 5
+    VelocityFactor: 1.0
+    AmmoItem: GRAVEL
+    FireSound: ENTITY_GENERIC_EXPLODE
+  # Trebuchet: a clay pot of burning naphtha that bursts into flames
+  GreekFire:
+    ProjectileType: ENTITY
+    Inaccuracy: 0.2
+    ProjectileCount: 1
+    VelocityFactor: 1.0
+    EntityType: FIREBALL
+    AmmoItem: MAGMA_CREAM
+    FireSound: ITEM_FIRECHARGE_USE
+  # Ballista: a single burning bolt that sets its target alight
+  FireBolt:
+    ProjectileType: ENTITY
+    Inaccuracy: 0.0125
+    ProjectileCount: 1
+    VelocityFactor: 0.75
+    EntityType: SMALL_FIREBALL
+    AmmoItem: BLAZE_POWDER
+    FireSound: ITEM_CROSSBOW_SHOOT
+  # Ballista: a marked bolt that makes whatever it hits glow, for spotting targets
+  SignalBolt:
+    ProjectileType: ENTITY
+    Inaccuracy: 0.0125
+    ProjectileCount: 1
+    VelocityFactor: 0.5
+    EntityType: SPECTRAL_ARROW
+    ArrowDamageFactor: 0.5
+    AmmoItem: SPECTRAL_ARROW
+    FireSound: ITEM_CROSSBOW_SHOOT
+  # Cannons: a bag of iron balls that sprays out like a shotgun, deadly up close
+  Grapeshot:
+    ProjectileType: ENTITY
+    Inaccuracy: 0.45
+    ProjectileCount: 16
+    VelocityFactor: 0.6
+    EntityType: ARROW
+    ArrowDamageFactor: 0.4
+    AmmoItem: IRON_NUGGET
+    FireSound: ENTITY_GENERIC_EXPLODE
+  # Cannons: two balls chained together, few but heavy hitting
+  ChainShot:
+    ProjectileType: ENTITY
+    Inaccuracy: 0.15
+    ProjectileCount: 2
+    VelocityFactor: 0.8
+    EntityType: ARROW
+    ArrowDamageFactor: 2.0
+    AmmoItem: IRON_CHAIN
+    FireSound: ENTITY_GENERIC_EXPLODE
+  # Breach Cannon: a hollow shell with a lit fuse, it bounces and rolls before it explodes like TNT
+  Bombshell:
+    ProjectileType: ENTITY
+    Inaccuracy: 0.1
+    ProjectileCount: 1
+    VelocityFactor: 0.5
+    EntityType: TNT
+    Strength: 2
+    AmmoItem: FIRE_CHARGE
+    FireSound: ENTITY_GENERIC_EXPLODE
 
 # ======================================
 # |            Siege Engines           |
@@ -148,66 +327,97 @@ Projectiles:
 # At this time you cannot add new Siege Engines via the config
 # You can edit the existing Siege Engines with the various options below
 
+# Siege Engines are fired with the item in the player's main hand at the moment the Siege Engine shoots.
+# If that item is the AmmoItem of one of the Siege Engine's Projectiles, that projectile is fired and one
+# of the item is consumed (except in creative mode). Otherwise the DefaultProjectile is fired for free.
+
 # Health: How many hearts of health the Siege Engine has before it is destroyed
 # Shot Amount: How many projectiles the Siege Engine will fire
-# VelocityPerFuel: How much each fuel item increases the velocity of fired projectiles
-# MaxFuel: The maximum amount of fuel that can be loaded into each Siege Engine
+# Velocity: The base velocity of fired projectiles, multiplied by the projectile's VelocityFactor
+# MinAimAngle / MaxAimAngle: The lowest and highest angle in degrees above the horizon the Siege Engine can aim, negative is below
+# Cooldown: Seconds after a shot before the Siege Engine can fire again, the reload animation plays during it
+# Projectiles: The projectiles that can be fired by holding their AmmoItem
+# DefaultProjectile: The projectile fired when not holding the AmmoItem of any of the above Projectiles
 # ItemName: The default item name for the Siege Engine item
 # Lore: The default lore for the Siege Engine item
 # CanMount (EXPERIMENTAL): Whether the Siege Engine can be placed on a mountable mob
 
 SiegeEngines:
   Trebuchet:
+    # Lobs only, the sling releases between 30 and 70 degrees and it cannot fire flat or downwards
+    MinAimAngle: 30
+    MaxAimAngle: 70
     Health: 8
     ShotAmount: 1
-    VelocityPerFuel: 0.75
-    MaxFuel: 3
-    FuelItem: STRING
+    Velocity: 2.25
+    Cooldown: 5
     Projectiles:
       - StoneShot
       - BreachShot
       - FireShot
       - RepeatingShot
+      - RubbleShot
+      - GreekFire
+      - SplashPotionProjectile
+    DefaultProjectile: StoneShot
     ItemName: "&e&lTrebuchet"
     Lore:
       - "&ePlace as a block to spawn a Trebuchet"
+      - "&7Right click to take or release control"
+      - "&7Left click to fire while in control"
   Ballista:
+    # Tilts on its stand, 45 degrees for its longest shot and down over walls
+    MinAimAngle: -15
+    MaxAimAngle: 45
     Health: 5
     ShotAmount: 1
-    VelocityPerFuel: 2.0
-    MaxFuel: 2
-    FuelItem: STRING
+    Velocity: 4.0
+    Cooldown: 2
     Projectiles:
       - BallistaBoltShot
       - ScatterShot
       - DragonsBreath
       - FireworkShot
       - SplashPotionProjectile
+      - FireBolt
+      - SignalBolt
+    DefaultProjectile: BallistaBoltShot
     ItemName: "&e&lBallista"
     Lore:
       - "&ePlace as a block to spawn a Ballista"
+      - "&7Right click to take or release control"
+      - "&7Left click to fire while in control"
     CanMount: false
   SwivelCannon:
+    # Swung by hand on its yoke, depressing steeply to fire down at attackers below
+    MinAimAngle: -30
+    MaxAimAngle: 40
     Health: 15
     ShotAmount: 1
-    VelocityPerFuel: 0.975
-    MaxFuel: 5
-    FuelItem: GUNPOWDER
+    Velocity: 4.875
+    Cooldown: 2
     Projectiles:
       - StoneShot
       - RepeatingShot
       - ScatterShot
       - FireShot
       - FireworkShot
+      - Grapeshot
+      - ChainShot
+    DefaultProjectile: StoneShot
     ItemName: "&e&lSwivel Cannon"
     Lore:
       - "&ePlace as a block to spawn a Swivel Cannon"
+      - "&7Right click to take or release control"
+      - "&7Left click to fire while in control"
   BreachCannon:
+    # A heavy gun on a wedge carriage, fired near flat to batter walls
+    MinAimAngle: -5
+    MaxAimAngle: 15
     Health: 25
     ShotAmount: 1
-    VelocityPerFuel: 1.0625
-    MaxFuel: 4
-    FuelItem: GUNPOWDER
+    Velocity: 4.25
+    Cooldown: 4
     Projectiles:
       - StoneShot
       - RepeatingShot
@@ -216,6 +426,12 @@ SiegeEngines:
       - ScatterShot
       - DragonsBreath
       - FireworkShot
+      - Grapeshot
+      - ChainShot
+      - Bombshell
+    DefaultProjectile: StoneShot
     ItemName: "&e&lBreach Cannon"
     Lore:
       - "&ePlace as a block to spawn a Breach Cannon"
+      - "&7Right click to take or release control"
+      - "&7Left click to fire while in control"

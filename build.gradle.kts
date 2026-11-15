@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.shadow) // Shades and relocates dependencies, see https://gradleup.com/shadow/
     alias(libs.plugins.run.paper) // Built in test server using runServer and runMojangMappedServer tasks
     alias(libs.plugins.plugin.yml) // Automatic plugin.yml generation
+    alias(libs.plugins.paperweight) // Server internals, used for siege engine explosions
 
     eclipse
     idea
@@ -30,7 +31,7 @@ dependencies {
     // Core dependencies
     compileOnly(libs.annotations)
     annotationProcessor(libs.annotations)
-    compileOnly(libs.paper.api)
+    paperweight.paperDevBundle(libs.versions.paper.get()) // Includes the Paper API
 }
 
 tasks {
@@ -103,6 +104,13 @@ bukkit { // Options: https://github.com/Minecrell/plugin-yml#bukkit
     load = net.minecrell.pluginyml.bukkit.BukkitPluginDescription.PluginLoadOrder.POSTWORLD // STARTUP or POSTWORLD
     depend = listOf()
     softDepend = listOf()
+
+    permissions {
+        register("siegeengines.reinforcement.view") {
+            description = "Use /rv to see how many breaks damaged blocks have left"
+            default = net.minecrell.pluginyml.bukkit.BukkitPluginDescription.Permission.Default.TRUE
+        }
+    }
 }
 
 fun applyCustomVersion() {

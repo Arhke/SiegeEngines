@@ -1,9 +1,10 @@
 [versions]
+paper = "26.3.build.205-stable"
 
 [libraries]
 # Core dependencies
 annotations = "org.jetbrains:annotations:26.1.0"
-paper-api = "io.papermc.paper:paper-api:26.3.build.205-stable"
+paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
 
 [bundles]
 
@@ -11,3 +12,4 @@ paper-api = "io.papermc.paper:paper-api:26.3.build.205-stable"
 shadow = "com.gradleup.shadow:9.6.1"
 run-paper = "xyz.jpenilla.run-paper:3.1.0"
 plugin-yml = "de.eldoria.plugin-yml.bukkit:0.9.0"
+paperweight = "io.papermc.paperweight.userdev:2.0.0-beta.24"
